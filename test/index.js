@@ -233,6 +233,22 @@ describe('Rollover', () => {
     setImmediate(() => { barrier.pass(); });
     return barrier;
   });
+
+  it('does not report if log level is less than reportLevel', async () => {
+    const server = await createServer({
+      rollbar: {
+        accessToken: ROLLOVER_ROLLBAR_TOKEN,
+        reportLevel: 'error'
+      }
+    });
+    const barrier = checkLog(server, (level, item) => {
+      Code.fail('nothing should be logged');
+    });
+
+    server.log(['rollbar'], 'server.log() -> rollbar.log()');
+    setImmediate(() => { barrier.pass(); });
+    return barrier;
+  });
 });
 
 
@@ -292,24 +308,32 @@ async function createServer (options) {
 
 function checkLog (server, check) {
   const barrier = new Barrier();
-  const client = server.plugins.rollover.rollbar.client;
 
-  StandIn.replace(client, '_log', (stand, level, item) => {
-    check(level, item);
+  const queue = server.plugins.rollover.rollbar.client.notifier.queue;
+
+  StandIn.replace(queue, 'addItem', (stand, item, callback, originalError, originalItem) => {
     stand.restore();
+
+    const predicateResult = queue._applyPredicates(item);
+
+    expect(predicateResult.err).to.not.exist();
+
+    if (!predicateResult.stop) {
+      check(item.level, originalItem);
+    }
 
     if (ROLLOVER_ROLLBAR_TOKEN === undefined) {
       barrier.pass();
       return;
     }
 
-    // This module doesn't use the callback field, so it can be hijacked here.
-    item.callback = function (err) {
+    // This module does not use callback, no it is safe to hijack it here.
+    function cb (err) {
       expect(err).to.not.exist();
       barrier.pass();
-    };
+    }
 
-    stand.original.call(client, level, item);
+    stand.original.call(queue, item, cb, originalError, originalItem);
   });
 
   return barrier;
