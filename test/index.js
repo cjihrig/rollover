@@ -28,7 +28,7 @@ describe('Rollover', () => {
   });
 
   it('reports uncaught errors', async () => {
-    const server = await createServer();
+    const server = await createServer({ reportRequestLogs: false });
     const barrier = checkLog(server, (level, item) => {
       expect(level).to.equal('error');
       expect(item.message).to.not.exist();
@@ -51,7 +51,7 @@ describe('Rollover', () => {
   });
 
   it('reports boom errors', async () => {
-    const server = await createServer();
+    const server = await createServer({ reportRequestLogs: false });
     const barrier = checkLog(server, (level, item) => {
       expect(level).to.equal('error');
       expect(item.message).to.not.exist();
@@ -74,7 +74,7 @@ describe('Rollover', () => {
   });
 
   it('does not report errors if reportErrorResponses is false', async () => {
-    const server = await createServer({ reportErrorResponses: false });
+    const server = await createServer({ reportErrorResponses: false, reportRequestLogs: false });
     const barrier = checkLog(server, (level, item) => {
       Code.fail('nothing should be logged');
     });
@@ -110,12 +110,13 @@ describe('Rollover', () => {
     const server = await createServer();
     const barrier = checkLog(server, (level, item) => {
       expect(level).to.equal('error');
-      expect(item.message).to.equal('server.log() -> rollbar.error()');
-      expect(item.err).to.not.exist();
+      expect(item.message).to.not.exist();
+      expect(item.err).to.exist();
+      expect(item.err.message).to.equal('server.log() -> rollbar.error()');
       expect(item.custom).to.exist();
       expect(item.custom.timestamp).to.be.a.number();
       expect(item.custom.tags).to.equal(['rollbar', 'error']);
-      expect(item.custom.data).to.equal('server.log() -> rollbar.error()');
+      expect(item.custom.error.message).to.equal('server.log() -> rollbar.error()');
       expect(item.custom.channel).to.equal('app');
       expect(item.timestamp).to.be.a.number();
       expect(item.uuid).to.be.a.string();
@@ -123,7 +124,7 @@ describe('Rollover', () => {
       expect(item.request).to.not.exist();
     });
 
-    server.log(['rollbar', 'error'], 'server.log() -> rollbar.error()');
+    server.log(['rollbar', 'error'], new Error('server.log() -> rollbar.error()'));
     return barrier;
   });
 
@@ -170,12 +171,13 @@ describe('Rollover', () => {
     const barrier = checkLog(server, (level, item) => {
       expect(level).to.equal('error');
 
-      expect(item.message).to.equal('request.log() -> rollbar.error()');
-      expect(item.err).to.not.exist();
+      expect(item.message).to.not.exist();
+      expect(item.err).to.exist();
+      expect(item.err.message).to.equal('request.log() -> rollbar.error()');
       expect(item.custom).to.exist();
       expect(item.custom.timestamp).to.be.a.number();
       expect(item.custom.tags).to.equal(['rollbar', 'error']);
-      expect(item.custom.data).to.equal('request.log() -> rollbar.error()');
+      expect(item.custom.error.message).to.equal('request.log() -> rollbar.error()');
       expect(item.custom.channel).to.equal('app');
       expect(item.timestamp).to.be.a.number();
       expect(item.uuid).to.be.a.string();
@@ -296,7 +298,7 @@ async function createServer (options) {
       method: 'GET',
       path: '/request_error_rollbar',
       handler (request, h) {
-        request.log(['rollbar', 'error'], 'request.log() -> rollbar.error()');
+        request.log(['rollbar', 'error'], new Error('request.log() -> rollbar.error()'));
         return 'request_error_rollbar_result';
       }
     }

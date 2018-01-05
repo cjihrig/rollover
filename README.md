@@ -27,8 +27,8 @@ server.route([
     method: 'GET',
     path: '/foo',
     handler (request, h) {
-      request.log(['rollbar'], 'request.log() -> rollbar.log()');
-      request.log(['rollbar', 'error'], 'request.log() -> rollbar.error()');
+      request.log(['log'], 'request.log() -> rollbar.log()');
+      request.log(['log', 'error'], 'request.log() -> rollbar.error()');
       throw new Error('throw_err');
     }
   }
@@ -49,7 +49,7 @@ ROLLOVER_ROLLBAR_TOKEN=your_rollbar_token npm test
 
 - `rollbar` - Rollbar configuration that is passed directly to the [`Rollbar()`](https://www.npmjs.com/package/rollbar) constructor. This option is required.
 - `reportErrorResponses` (Boolean) - When `true`, a hapi `onPreResponse` handler is created which sends `Error` responses to Rollbar. Defaults to `true`.
-- `reportRequestLogs` (Boolean) - When `true`, a hapi `'request'` event handler is created which sends `request.log()` data to Rollbar if the `'rollbar'` event tag is present. If the `'error'` event tag is present, the data is logged as an error. Defaults to `true`.
-- `reportServerLogs` (Boolean) - When `true`, a hapi server `'log'` event handler is created which sends `server.log()` data to Rollbar if the `'rollbar'` event tag is present. If the `'error'` event tag is present, the data is logged as an error. Defaults to `true`.
+- `reportRequestLogs` (Boolean) - When `true`, a hapi `'request'` event handler is created which sends `request.log()` data to Rollbar. The Rollbar report level can be controlled via the `request.log()` tags `'critical'`, `'error'`, `'warning'`, `'info'`, and `'debug'`. If none of these tags are provided, Rollbar's default log level is used. Defaults to `true`.
+- `reportServerLogs` (Boolean) - When `true`, a hapi server `'log'` event handler is created which sends `server.log()` data to Rollbar. The Rollbar report level can be controlled via the `request.log()` tags `'critical'`, `'error'`, `'warning'`, `'info'`, and `'debug'`. If none of these tags are provided, Rollbar's default log level is used. Defaults to `true`.
 - `silenceRollbarLogger` (Boolean) - When `true`, Rollbar's `console` logger is silenced. Defaults to `true`.
 - `exposedName` (String) - `rollover` exposes a `Rollbar` instance, making it possible to implement custom usage throughout an application. By default, this instance is exposed on the hapi server as `server.plugins.rollover.rollbar`. This option allows the name to be changed to something other than `rollbar`.
