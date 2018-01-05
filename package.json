@@ -22,7 +22,7 @@
     "node": ">=8.9.0"
   },
   "dependencies": {
-    "rollbar": "2.3.3"
+    "rollbar": "2.3.5"
   },
   "devDependencies": {
     "belly-button": "4.x.x",
