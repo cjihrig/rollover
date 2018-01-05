@@ -1,6 +1,6 @@
 {
   "name": "rollover",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "hapi 17+ rollbar plugin",
   "author": "Continuation Labs <contact@continuation.io> (http://continuation.io/)",
   "main": "lib/index.js",
