@@ -13,7 +13,7 @@ const lab = exports.lab = Lab.script();
 const { describe, it } = lab;
 const { expect } = Code;
 
-const { ROLLOVER_ROLLBAR_TOKEN, ROLLOVER_ROLLBAR_LIVE } = process.env;
+const { ROLLOVER_ROLLBAR_TOKEN } = process.env;
 
 
 describe('Rollover', () => {
@@ -298,7 +298,7 @@ function checkLog (server, check) {
     check(level, item);
     stand.restore();
 
-    if (ROLLOVER_ROLLBAR_LIVE !== '1') {
+    if (ROLLOVER_ROLLBAR_TOKEN === undefined) {
       barrier.pass();
       return;
     }
